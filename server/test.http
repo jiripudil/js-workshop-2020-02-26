@@ -1,0 +1,97 @@
+GET http://localhost:4000/todos
+Accept: application/json
+
+> {%
+client.test('fetch initial todos', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todos.length === 6, 'response contains six todos');
+});
+%}
+
+###
+
+POST http://localhost:4000/todos
+Content-Type: application/json
+
+{"text":"Otestovat server","done":0}
+
+> {%
+client.test('add todo', function () {
+	client.assert(response.status === 201, 'response has status 201');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todo.id === 7, 'response contains added todo with id = 7');
+	client.assert(response.body.todo.text === 'Otestovat server', 'response contains added todo with proper text');
+	client.assert(response.body.todo.done === 0, 'response contains added todo with done = 0');
+});
+%}
+
+###
+
+GET http://localhost:4000/todos
+Accept: application/json
+
+> {%
+client.test('fetch todos after adding one', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todos.length === 7, 'response contains six todos');
+});
+%}
+
+###
+
+PATCH http://localhost:4000/todos/7
+Content-Type: application/json
+
+{"text":"Otestovat server","done":1}
+
+> {%
+client.test('update todo', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todo.id === 7, 'response contains added todo with id = 7');
+	client.assert(response.body.todo.text === 'Otestovat server', 'response contains added todo with proper text');
+	client.assert(response.body.todo.done === 1, 'response contains added todo with done = 0');
+});
+%}
+
+###
+
+GET http://localhost:4000/todos
+Accept: application/json
+
+> {%
+client.test('fetch todos after modifying one', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todos.length === 7, 'response contains six todos');
+});
+%}
+
+###
+
+DELETE http://localhost:4000/todos/7
+Accept: application/json
+
+> {%
+client.test('delete todo', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+});
+%}
+
+###
+
+GET http://localhost:4000/todos
+Accept: application/json
+
+> {%
+client.test('fetch todos after deleting one', function () {
+	client.assert(response.status === 200, 'response has status 200');
+	client.assert(response.body.success, 'response is successful');
+	client.assert(response.body.todos.length === 6, 'response contains six todos');
+});
+%}
+
+###
