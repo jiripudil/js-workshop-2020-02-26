@@ -58,13 +58,23 @@ body {
 	border-bottom: 1px solid #ccc;
 }
 
-.todoList-todo-text {
+.todoList-todo-wrapper {
 	display: flex;
 	align-items: baseline;
 }
 
 .todoList-todo-checkbox {
 	margin-right: 1rem;
+}
+
+.todoList-todo-remove {
+	margin-left: auto;
+	background: transparent;
+	color: #666;
+	border: 0;
+	padding: 0;
+	font-size: 1rem;
+	cursor: pointer;
 }
 
 .todoList-todo--done .todoList-todo-text {

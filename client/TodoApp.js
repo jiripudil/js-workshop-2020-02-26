@@ -41,10 +41,19 @@ function TodoApp() {
 		$checkbox.attr('type', 'checkbox');
 		$checkbox.attr('checked', !!todo.done);
 
+		var $text = $('<span />');
+		$text.addClass('todoList-todo-text');
+		$text.text(todo.text);
+
+		var $removeButton = $('<button />');
+		$removeButton.addClass('todoList-todo-remove');
+		$removeButton.html('&times;');
+
 		var $label = $('<label />');
-		$label.addClass('todoList-todo-text');
+		$label.addClass('todoList-todo-wrapper');
 		$label.append($checkbox);
-		$label.append(todo.text);
+		$label.append($text);
+		$label.append($removeButton);
 
 		$todo.append($label);
 		return $todo;
