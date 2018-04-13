@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Todo today</title>
+
+	<link rel="stylesheet" type="text/css" href="style.css" />
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="app.js"></script>
+</head>
+<body>
+
+	<div class="todoApp">
+
+		<h1 class="todoApp-heading">
+			Todo today
+		</h1>
+
+		<div class="todoApp-todos">
+			<div class="addTodo">
+				<form class="addTodo-form">
+					<label>
+						<input type="text" class="addTodo-form-input" placeholder="Přidat todo..." />
+					</label>
+				</form>
+			</div>
+
+			<div class="loading">
+				Nahrávám...
+			</div>
+
+			<ul class="todoList">
+				<li class="todoList-todo">
+					<label class="todoList-todo-text">
+						<input type="checkbox" class="todoList-todo-checkbox" />
+						Zbavit se jQuery
+					</label>
+				</li>
+
+				<li class="todoList-todo todoList-todo--done">
+					<label class="todoList-todo-text">
+						<input type="checkbox" class="todoList-todo-checkbox" checked />
+						Přijít na školení moderního JS
+					</label>
+				</li>
+			</ul>
+		</div>
+
+	</div>
+
+</body>
+</html>
