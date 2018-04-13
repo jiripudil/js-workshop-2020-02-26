@@ -29,8 +29,8 @@ function TodoApp() {
 	var createTodo = $.proxy(function (todo) {
 		var $todo = $('<li />');
 		$todo.addClass('todoList-todo');
-		$todo.data('id', todo.id);
-		$todo.data('createdAt', todo.createdAt);
+		$todo.attr('data-id', todo.id);
+		$todo.attr('data-created-at', todo.created_at);
 
 		if (todo.done) {
 			$todo.addClass('todoList-todo--done');
@@ -48,6 +48,10 @@ function TodoApp() {
 		var $removeButton = $('<button />');
 		$removeButton.addClass('todoList-todo-remove');
 		$removeButton.html('&times;');
+		$removeButton.on('click', function () {
+			var id = $(this).parents('.todoList-todo').attr('data-id');
+			removeTodo(id);
+		});
 
 		var $label = $('<label />');
 		$label.addClass('todoList-todo-wrapper');
@@ -57,6 +61,25 @@ function TodoApp() {
 
 		$todo.append($label);
 		return $todo;
+	}, this);
+
+	var removeTodo = $.proxy(function (id) {
+		// send request to delete the item
+		$.ajax(this.baseUrl + '/todos/' + id, {
+			method: 'DELETE',
+			success: function (response) {
+				if ( ! response.success) {
+					alert('Při zpracování požadavku došlo k chybě.');
+					return;
+				}
+
+				// if successful, animate away and then remove the item
+				var $todo = $('.todoList-todo[data-id=' + id + ']');
+				$todo.slideUp(undefined, undefined, function () {
+					$todo.remove();
+				});
+			}
+		});
 	}, this);
 
 	return this;
