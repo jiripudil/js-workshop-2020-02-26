@@ -51,6 +51,10 @@ function TodoApp() {
 		$checkbox.addClass('todoList-todo-checkbox');
 		$checkbox.attr('type', 'checkbox');
 		$checkbox.attr('checked', !!todo.done);
+		$checkbox.on('click', function () {
+			var id = $(this).parents('.todoList-todo').attr('data-id');
+			changeTodoDone(id, this.checked);
+		});
 
 		var $text = $('<span />');
 		$text.addClass('todoList-todo-text');
@@ -79,6 +83,11 @@ function TodoApp() {
 		var $children = checked
 			? $todoList.children('.todoList-todo.todoList-todo--done')
 			: $todoList.children('.todoList-todo:not(.todoList-todo--done)');
+
+		if ($children.length === 0) {
+			$todoList[checked ? 'append' : 'prepend']($todo);
+			return;
+		}
 
 		if ($children.first().attr('data-created-at') < $todo.attr('data-created-at')) {
 			$children.first().before($todo);
@@ -115,6 +124,36 @@ function TodoApp() {
 				insertTodoItem($todo);
 				$todo.slideDown();
 				callback();
+			}
+		})
+	}, this);
+
+	var changeTodoDone = $.proxy(function (id, done) {
+		$.ajax(this.baseUrl + '/todos/' + id, {
+			method: 'PATCH',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify({done: done}),
+			success: function (response) {
+				if ( ! response.success) {
+					alert('Při zpracování požadavku došlo k chybě.');
+					return;
+				}
+
+				var $todo = $('.todoList-todo[data-id=' + id + ']');
+				$todo.find('.todoList-todo-checkbox').attr('checked', !!response.todo.done);
+				$todo.slideUp(undefined, undefined, function () {
+					$todo.detach();
+					insertTodoItem($todo);
+
+					if (response.todo.done) {
+						$todo.addClass('todoList-todo--done');
+
+					} else {
+						$todo.removeClass('todoList-todo--done');
+					}
+
+					$todo.slideDown();
+				});
 			}
 		})
 	}, this);
