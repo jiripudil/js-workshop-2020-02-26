@@ -17,16 +17,27 @@ function TodoApp() {
 				// insert todos one by one
 				for (var i = 0; i < response.todos.length; i++) {
 					var todo = response.todos[i];
-					var $todo = createTodo(todo);
+					var $todo = createTodoItem(todo);
 
 					// todos come sorted from the server, so simple append() is enough here
 					$todoList.append($todo);
 				}
 			}, this)
 		});
+
+		$('.addTodo-form').on('submit', function (event) {
+			event.preventDefault();
+
+			var $input = $('.addTodo-form-input');
+			var text = $input.val();
+			addTodo(text, function () {
+				$input.val('');
+			});
+		});
 	}, this);
 
-	var createTodo = $.proxy(function (todo) {
+
+	function createTodoItem(todo) {
 		var $todo = $('<li />');
 		$todo.addClass('todoList-todo');
 		$todo.attr('data-id', todo.id);
@@ -61,6 +72,51 @@ function TodoApp() {
 
 		$todo.append($label);
 		return $todo;
+	}
+
+	function insertTodoItem($todo) {
+		var checked = $todo.find('.todoList-todo-checkbox').attr('checked');
+		var $children = checked
+			? $todoList.children('.todoList-todo.todoList-todo--done')
+			: $todoList.children('.todoList-todo:not(.todoList-todo--done)');
+
+		if ($children.first().attr('data-created-at') < $todo.attr('data-created-at')) {
+			$children.first().before($todo);
+			return;
+		}
+
+		var inserted = false;
+		$children.each(function () {
+			if ( ! inserted && $(this).attr('data-created-at') < $todo.attr('data-created-at')) {
+				$(this).before($todo);
+				inserted = true;
+			}
+		});
+
+		if ( ! inserted) {
+			$children.last().after($todo);
+		}
+	}
+
+
+	var addTodo = $.proxy(function (text, callback) {
+		$.ajax(this.baseUrl + '/todos', {
+			method: 'POST',
+			contentType: 'application/json; charset=utf-8',
+			data: JSON.stringify({text: text}),
+			success: function (response) {
+				if ( ! response.success) {
+					alert('Při zpracování požadavku došlo k chybě.');
+					return;
+				}
+
+				var $todo = createTodoItem(response.todo);
+				$todo.css('display', 'none');
+				insertTodoItem($todo);
+				$todo.slideDown();
+				callback();
+			}
+		})
 	}, this);
 
 	var removeTodo = $.proxy(function (id) {
