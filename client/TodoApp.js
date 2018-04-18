@@ -1,8 +1,9 @@
 function TodoApp() {
 	this.baseUrl = 'https://my.todo.app';
 
-	var $todoList = $('.todoList');
-	this.initialize = $.proxy(function () {
+	this.initialize = $.proxy(function ($todoList) {
+		this.$todoList = $todoList;
+
 		// load todos
 		$.ajax(this.baseUrl + '/todos', {
 			success: $.proxy(function (response) {
@@ -20,7 +21,7 @@ function TodoApp() {
 					var $todo = createTodoItem(todo);
 
 					// todos come sorted from the server, so simple append() is enough here
-					$todoList.append($todo);
+					this.$todoList.append($todo);
 				}
 			}, this)
 		});
@@ -78,14 +79,14 @@ function TodoApp() {
 		return $todo;
 	}
 
-	function insertTodoItem($todo) {
+	var insertTodoItem = $.proxy(function ($todo) {
 		var checked = $todo.find('.todoList-todo-checkbox').attr('checked');
 		var $children = checked
-			? $todoList.children('.todoList-todo.todoList-todo--done')
-			: $todoList.children('.todoList-todo:not(.todoList-todo--done)');
+			? this.$todoList.children('.todoList-todo.todoList-todo--done')
+			: this.$todoList.children('.todoList-todo:not(.todoList-todo--done)');
 
 		if ($children.length === 0) {
-			$todoList[checked ? 'append' : 'prepend']($todo);
+			this.$todoList[checked ? 'append' : 'prepend']($todo);
 			return;
 		}
 
@@ -105,7 +106,7 @@ function TodoApp() {
 		if ( ! inserted) {
 			$children.last().after($todo);
 		}
-	}
+	}, this);
 
 
 	var addTodo = $.proxy(function (text, callback) {
