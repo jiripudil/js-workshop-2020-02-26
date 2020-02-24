@@ -23,11 +23,9 @@ const createTable = () => new Promise((resolve, reject) => {
 const insertInitialData = () => new Promise((resolve, reject) => {
 	const sql = `INSERT INTO todos (text, created_at, done) VALUES
 	('Přijít na školení moderního Javascriptu', CAST(strftime('%s', 'now', '-29 minutes') AS INTEGER), 1),
-	('Zbavit se jQuery', CAST(strftime('%s', 'now', '-24 minutes') AS INTEGER), 0),
 	('Začít psát moderní JS', CAST(strftime('%s', 'now', '-21 minutes') AS INTEGER), 0),
 	('Nastavit si build přes Webpack', CAST(strftime('%s', 'now', '-18 minutes') AS INTEGER), 0),
-	('Osahat si React a Redux', CAST(strftime('%s', 'now', '-11 minutes') AS INTEGER), 0),
-	('Napsat první test', CAST(strftime('%s', 'now', '-5 minutes') AS INTEGER), 0)`;
+	('Osahat si React', CAST(strftime('%s', 'now', '-11 minutes') AS INTEGER), 0)`;
 
 	db.run(sql, (error) => {
 		if (error) {
