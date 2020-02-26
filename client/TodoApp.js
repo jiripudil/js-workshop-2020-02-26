@@ -1,7 +1,9 @@
-function TodoApp() {
-	this.baseUrl = 'https://my.todo.app';
+class TodoApp {
+	constructor() {
+		this.baseUrl = 'https://my.todo.app';
+	}
 
-	this.initialize = function (todoList) {
+	initialize(todoList) {
 		this.todoList = todoList;
 
 		// load todos
@@ -17,7 +19,7 @@ function TodoApp() {
 
 				// insert todos one by one
 				for (const todo of response.todos) {
-					const todoItem = createTodoItem(todo);
+					const todoItem = this.createTodoItem(todo);
 
 					// todos come sorted from the server, so simple append() is enough here
 					this.todoList.append(todoItem);
@@ -30,14 +32,13 @@ function TodoApp() {
 
 			const inputElement = event.target.querySelector('.addTodo-form-input');
 			const text = inputElement.value;
-			addTodo(text, () => {
+			this.addTodo(text, () => {
 				inputElement.value = '';
 			});
 		});
-	}.bind(this);
+	}
 
-
-	function createTodoItem(todo) {
+	createTodoItem(todo) {
 		const todoElement = document.createElement('li');
 		todoElement.classList.add('todoList-todo');
 		todoElement.dataset.id = todo.id;
@@ -53,7 +54,7 @@ function TodoApp() {
 		checkboxElement.checked = !!todo.done;
 		checkboxElement.addEventListener('click', (event) => {
 			const id = event.target.closest('.todoList-todo').dataset.id;
-			changeTodoDone(id, event.target.checked);
+			this.changeTodoDone(id, event.target.checked);
 		});
 
 		const textElement = document.createElement('span');
@@ -65,7 +66,7 @@ function TodoApp() {
 		removeButtonElement.innerHTML = '&times;';
 		removeButtonElement.addEventListener('click', (event) => {
 			const id = event.target.closest('.todoList-todo').dataset.id;
-			removeTodo(id);
+			this.removeTodo(id);
 		});
 
 		const labelElement = document.createElement('label');
@@ -78,7 +79,7 @@ function TodoApp() {
 		return todoElement;
 	}
 
-	const insertTodoItem = (todoElement) => {
+	insertTodoItem(todoElement) {
 		const checked = todoElement.querySelector('.todoList-todo-checkbox').checked;
 		const childrenElements = checked
 			? this.todoList.querySelectorAll('.todoList-todo.todoList-todo--done')
@@ -106,29 +107,29 @@ function TodoApp() {
 			childrenElements.item(childrenElements.length - 1)
 				.insertAdjacentElement('afterend', todoElement);
 		}
-	};
+	}
 
 
-	const addTodo = (text, callback) => {
+	addTodo(text, callback) {
 		$.ajax(this.baseUrl + '/todos', {
 			method: 'POST',
 			contentType: 'application/json; charset=utf-8',
 			data: JSON.stringify({text: text}),
 			success: (response) => {
-				if ( ! response.success) {
+				if (!response.success) {
 					alert('Při zpracování požadavku došlo k chybě.');
 					return;
 				}
 
 				const todoElement = createTodoItem(response.todo);
-				insertTodoItem(todoElement);
+				this.insertTodoItem(todoElement);
 				//todoElement.slideDown();
 				callback();
 			}
 		})
-	};
+	}
 
-	const changeTodoDone = (id, done) => {
+	changeTodoDone(id, done) {
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'PATCH',
 			contentType: 'application/json; charset=utf-8',
@@ -145,12 +146,12 @@ function TodoApp() {
 				// todoElement.remove();
 				this.todoList.removeChild(todoElement);
 				todoElement.classList.toggle('todoList-todo--done');
-				insertTodoItem(todoElement);
+				this.insertTodoItem(todoElement);
 			}
 		})
 	};
 
-	const removeTodo = (id) => {
+	removeTodo(id) {
 		// send request to delete the item
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'DELETE',
@@ -165,7 +166,5 @@ function TodoApp() {
 				todoElement.remove();
 			}
 		});
-	};
-
-	return this;
+	}
 }
