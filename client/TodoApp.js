@@ -1,182 +1,172 @@
 function TodoApp() {
 	this.baseUrl = 'https://my.todo.app';
 
-	this.initialize = $.proxy(function ($todoList) {
-		this.$todoList = $todoList;
+	this.initialize = function (todoList) {
+		this.todoList = todoList;
 
 		// load todos
 		$.ajax(this.baseUrl + '/todos', {
-			success: $.proxy(function (response) {
+			success: function (response) {
 				if ( ! response.success) {
 					window.alert('Došlo k chybě při načítání dat.');
 					return;
 				}
 
 				// remove loading sign
-				$('.loading').remove();
+				document.querySelector('.loading').remove();
 
 				// insert todos one by one
 				for (var i = 0; i < response.todos.length; i++) {
 					var todo = response.todos[i];
-					var $todo = createTodoItem(todo);
+					var todoItem = createTodoItem(todo);
 
 					// todos come sorted from the server, so simple append() is enough here
-					this.$todoList.append($todo);
+					this.todoList.append(todoItem);
 				}
-			}, this)
+			}.bind(this)
 		});
 
-		$('.addTodo-form').on('submit', function (event) {
+		document.querySelector('.addTodo-form').addEventListener('submit', (event) => {
 			event.preventDefault();
 
-			var $input = $('.addTodo-form-input');
-			var text = $input.val();
-			addTodo(text, function () {
-				$input.val('');
+			var inputElement = event.target.querySelector('.addTodo-form-input');
+			var text = inputElement.value;
+			addTodo(text, () => {
+				inputElement.value = '';
 			});
 		});
-	}, this);
+	}.bind(this);
 
 
 	function createTodoItem(todo) {
-		var $todo = $('<li />');
-		$todo.addClass('todoList-todo');
-		$todo.attr('data-id', todo.id);
-		$todo.attr('data-created-at', todo.created_at);
+		var todoElement = document.createElement('li');
+		todoElement.classList.add('todoList-todo');
+		todoElement.dataset.id = todo.id;
+		todoElement.dataset.createdAt = todo.created_at;
 
 		if (todo.done) {
-			$todo.addClass('todoList-todo--done');
+			todoElement.classList.add('todoList-todo--done');
 		}
 
-		var $checkbox = $('<input />');
-		$checkbox.addClass('todoList-todo-checkbox');
-		$checkbox.attr('type', 'checkbox');
-		$checkbox.attr('checked', !!todo.done);
-		$checkbox.on('click', function () {
-			var id = $(this).parents('.todoList-todo').attr('data-id');
-			changeTodoDone(id, this.checked);
+		var checkboxElement = document.createElement('input');
+		checkboxElement.classList.add('todoList-todo-checkbox');
+		checkboxElement.type = 'checkbox';
+		checkboxElement.checked = !!todo.done;
+		checkboxElement.addEventListener('click', (event) => {
+			var id = event.target.closest('.todoList-todo').dataset.id;
+			changeTodoDone(id, event.target.checked);
 		});
 
-		var $text = $('<span />');
-		$text.addClass('todoList-todo-text');
-		$text.text(todo.text);
+		var textElement = document.createElement('span');
+		textElement.classList.add('todoList-todo-text');
+		textElement.innerText = todo.text;
 
-		var $removeButton = $('<button />');
-		$removeButton.addClass('todoList-todo-remove');
-		$removeButton.html('&times;');
-		$removeButton.on('click', function () {
-			var id = $(this).parents('.todoList-todo').attr('data-id');
+		var removeButtonElement = document.createElement('button');
+		removeButtonElement.classList.add('todoList-todo-remove');
+		removeButtonElement.innerHTML = '&times;';
+		removeButtonElement.addEventListener('click', (event) => {
+			var id = event.target.closest('.todoList-todo').dataset.id;
 			removeTodo(id);
 		});
 
-		var $label = $('<label />');
-		$label.addClass('todoList-todo-wrapper');
-		$label.append($checkbox);
-		$label.append($text);
-		$label.append($removeButton);
+		var labelElement = document.createElement('label');
+		labelElement.classList.add('todoList-todo-wrapper');
+		labelElement.append(checkboxElement);
+		labelElement.append(textElement);
+		labelElement.append(removeButtonElement);
 
-		$todo.append($label);
-		return $todo;
+		todoElement.append(labelElement);
+		return todoElement;
 	}
 
-	var insertTodoItem = $.proxy(function ($todo) {
-		var checked = $todo.find('.todoList-todo-checkbox').attr('checked');
-		var $children = checked
-			? this.$todoList.children('.todoList-todo.todoList-todo--done')
-			: this.$todoList.children('.todoList-todo:not(.todoList-todo--done)');
+	var insertTodoItem = function (todoElement) {
+		var checked = todoElement.querySelector('.todoList-todo-checkbox').checked;
+		var childrenElements = checked
+			? this.todoList.querySelectorAll('.todoList-todo.todoList-todo--done')
+			: this.todoList.querySelectorAll('.todoList-todo:not(.todoList-todo--done)');
 
-		if ($children.length === 0) {
-			this.$todoList[checked ? 'append' : 'prepend']($todo);
+		if (childrenElements.length === 0) {
+			this.todoList[checked ? 'append' : 'prepend'](todoElement);
 			return;
 		}
 
-		if ($children.first().attr('data-created-at') < $todo.attr('data-created-at')) {
-			$children.first().before($todo);
+		if (childrenElements.item(0).dataset.createdAt < todoElement.dataset.createdAt) {
+			this.todoList.insertBefore(todoElement, childrenElements.item(0));
 			return;
 		}
 
 		var inserted = false;
-		$children.each(function () {
-			if ( ! inserted && $(this).attr('data-created-at') < $todo.attr('data-created-at')) {
-				$(this).before($todo);
+		childrenElements.forEach((element) => {
+			if ( ! inserted && element.dataset.createdAt < todoElement.dataset.createdAt) {
+				this.todoList.insertBefore(todoElement, element);
 				inserted = true;
 			}
 		});
 
 		if ( ! inserted) {
-			$children.last().after($todo);
+			this.todoList.insertAfter(todoElement, childrenElements.item(childrenElements.length - 1));
 		}
-	}, this);
+	}.bind(this);
 
 
-	var addTodo = $.proxy(function (text, callback) {
+	var addTodo = function (text, callback) {
 		$.ajax(this.baseUrl + '/todos', {
 			method: 'POST',
 			contentType: 'application/json; charset=utf-8',
 			data: JSON.stringify({text: text}),
-			success: function (response) {
+			success: (response) => {
 				if ( ! response.success) {
 					alert('Při zpracování požadavku došlo k chybě.');
 					return;
 				}
 
-				var $todo = createTodoItem(response.todo);
-				$todo.css('display', 'none');
-				insertTodoItem($todo);
-				$todo.slideDown();
+				var todoElement = createTodoItem(response.todo);
+				todoElement.style.display = 'none';
+				insertTodoItem(todoElement);
+				//todoElement.slideDown();
 				callback();
 			}
 		})
-	}, this);
+	}.bind(this);
 
-	var changeTodoDone = $.proxy(function (id, done) {
+	var changeTodoDone = function (id, done) {
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'PATCH',
 			contentType: 'application/json; charset=utf-8',
 			data: JSON.stringify({done: done}),
-			success: function (response) {
+			success: (response) => {
 				if ( ! response.success) {
 					alert('Při zpracování požadavku došlo k chybě.');
 					return;
 				}
 
-				var $todo = $('.todoList-todo[data-id=' + id + ']');
-				$todo.find('.todoList-todo-checkbox').attr('checked', !!response.todo.done);
-				$todo.slideUp(undefined, undefined, function () {
-					$todo.detach();
-					insertTodoItem($todo);
+				var todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+				todoElement.querySelector('.todoList-todo-checkbox').checked = !!response.todo.done;
 
-					if (response.todo.done) {
-						$todo.addClass('todoList-todo--done');
-
-					} else {
-						$todo.removeClass('todoList-todo--done');
-					}
-
-					$todo.slideDown();
-				});
+				// todoElement.remove();
+				this.todoList.removeChild(todoElement);
+				todoElement.classList.toggle('todoList-todo--done');
+				insertTodoItem(todoElement);
 			}
 		})
-	}, this);
+	}.bind(this);
 
-	var removeTodo = $.proxy(function (id) {
+	var removeTodo = function (id) {
 		// send request to delete the item
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'DELETE',
-			success: function (response) {
+			success: (response) => {
 				if ( ! response.success) {
 					alert('Při zpracování požadavku došlo k chybě.');
 					return;
 				}
 
 				// if successful, animate away and then remove the item
-				var $todo = $('.todoList-todo[data-id=' + id + ']');
-				$todo.slideUp(undefined, undefined, function () {
-					$todo.remove();
-				});
+				var todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+				todoElement.remove();
 			}
 		});
-	}, this);
+	}.bind(this);
 
 	return this;
 }
