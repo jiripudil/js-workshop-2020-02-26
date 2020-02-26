@@ -3,38 +3,36 @@ class TodoApp {
 		this.baseUrl = 'https://my.todo.app';
 	}
 
-	initialize(todoList) {
+	async initialize(todoList) {
 		this.todoList = todoList;
 
 		// load todos
-		$.ajax(this.baseUrl + '/todos', {
-			success: function (response) {
-				if ( ! response.success) {
-					window.alert('Došlo k chybě při načítání dat.');
-					return;
-				}
+		const response = await fetch(this.baseUrl + '/todos');
+		if ( ! response.ok) {
+			window.alert('Došlo k chybě při načítání dat.');
+			return;
+		}
 
-				// remove loading sign
-				document.querySelector('.loading').remove();
+		const {todos} = await response.json();
 
-				// insert todos one by one
-				for (const todo of response.todos) {
-					const todoItem = this.createTodoItem(todo);
+		// remove loading sign
+		document.querySelector('.loading').remove();
 
-					// todos come sorted from the server, so simple append() is enough here
-					this.todoList.append(todoItem);
-				}
-			}.bind(this)
-		});
+		// insert todos one by one
+		for (const todo of todos) {
+			const todoItem = this.createTodoItem(todo);
 
-		document.querySelector('.addTodo-form').addEventListener('submit', (event) => {
+			// todos come sorted from the server, so simple append() is enough here
+			this.todoList.append(todoItem);
+		}
+
+		document.querySelector('.addTodo-form').addEventListener('submit', async (event) => {
 			event.preventDefault();
 
 			const inputElement = event.target.querySelector('.addTodo-form-input');
 			const text = inputElement.value;
-			this.addTodo(text, () => {
-				inputElement.value = '';
-			});
+			await this.addTodo(text);
+			inputElement.value = '';
 		});
 	}
 
@@ -110,61 +108,65 @@ class TodoApp {
 	}
 
 
-	addTodo(text, callback) {
-		$.ajax(this.baseUrl + '/todos', {
+	async addTodo(text) {
+		const response = await fetch(`${this.baseUrl}/todos`, {
 			method: 'POST',
-			contentType: 'application/json; charset=utf-8',
-			data: JSON.stringify({text: text}),
-			success: (response) => {
-				if (!response.success) {
-					alert('Při zpracování požadavku došlo k chybě.');
-					return;
-				}
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({text}),
+		});
 
-				const todoElement = createTodoItem(response.todo);
-				this.insertTodoItem(todoElement);
-				//todoElement.slideDown();
-				callback();
-			}
-		})
+		if (!response.ok) {
+			alert('Při zpracování požadavku došlo k chybě.');
+			return;
+		}
+
+		const {todo} = await response.json();
+
+		const todoElement = this.createTodoItem(todo);
+		this.insertTodoItem(todoElement);
+		//todoElement.slideDown();
 	}
 
-	changeTodoDone(id, done) {
-		$.ajax(this.baseUrl + '/todos/' + id, {
+	async changeTodoDone(id, done) {
+		const response = await fetch(`${this.baseUrl}/todos/${id}`, {
 			method: 'PATCH',
-			contentType: 'application/json; charset=utf-8',
-			data: JSON.stringify({done: done}),
-			success: (response) => {
-				if ( ! response.success) {
-					alert('Při zpracování požadavku došlo k chybě.');
-					return;
-				}
+			headers: {
+				'Content-Type': 'application/json; charset=utf-8',
+			},
+			body: JSON.stringify({done}),
+		});
 
-				const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
-				todoElement.querySelector('.todoList-todo-checkbox').checked = !!response.todo.done;
+		if ( ! response.ok) {
+			alert('Při zpracování požadavku došlo k chybě.');
+			return;
+		}
 
-				// todoElement.remove();
-				this.todoList.removeChild(todoElement);
-				todoElement.classList.toggle('todoList-todo--done');
-				this.insertTodoItem(todoElement);
-			}
-		})
+		const {todo} = await response.json();
+
+		const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+		todoElement.querySelector('.todoList-todo-checkbox').checked = !!todo.done;
+
+		// todoElement.remove();
+		this.todoList.removeChild(todoElement);
+		todoElement.classList.toggle('todoList-todo--done');
+		this.insertTodoItem(todoElement);
 	};
 
-	removeTodo(id) {
+	async removeTodo(id) {
 		// send request to delete the item
-		$.ajax(this.baseUrl + '/todos/' + id, {
+		const response = await fetch(`${this.baseUrl}/todos/${id}`, {
 			method: 'DELETE',
-			success: (response) => {
-				if ( ! response.success) {
-					alert('Při zpracování požadavku došlo k chybě.');
-					return;
-				}
-
-				// if successful, animate away and then remove the item
-				const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
-				todoElement.remove();
-			}
 		});
+
+		if ( ! response.ok) {
+			alert('Při zpracování požadavku došlo k chybě.');
+			return;
+		}
+
+		// if successful, animate away and then remove the item
+		const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+		todoElement.remove();
 	}
 }
