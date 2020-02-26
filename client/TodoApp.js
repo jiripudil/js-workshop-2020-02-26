@@ -1,4 +1,4 @@
-class TodoApp {
+export class TodoApp {
 	constructor() {
 		this.baseUrl = 'https://my.todo.app';
 	}
