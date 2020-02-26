@@ -16,9 +16,8 @@ function TodoApp() {
 				document.querySelector('.loading').remove();
 
 				// insert todos one by one
-				for (var i = 0; i < response.todos.length; i++) {
-					var todo = response.todos[i];
-					var todoItem = createTodoItem(todo);
+				for (const todo of response.todos) {
+					const todoItem = createTodoItem(todo);
 
 					// todos come sorted from the server, so simple append() is enough here
 					this.todoList.append(todoItem);
@@ -29,8 +28,8 @@ function TodoApp() {
 		document.querySelector('.addTodo-form').addEventListener('submit', (event) => {
 			event.preventDefault();
 
-			var inputElement = event.target.querySelector('.addTodo-form-input');
-			var text = inputElement.value;
+			const inputElement = event.target.querySelector('.addTodo-form-input');
+			const text = inputElement.value;
 			addTodo(text, () => {
 				inputElement.value = '';
 			});
@@ -39,7 +38,7 @@ function TodoApp() {
 
 
 	function createTodoItem(todo) {
-		var todoElement = document.createElement('li');
+		const todoElement = document.createElement('li');
 		todoElement.classList.add('todoList-todo');
 		todoElement.dataset.id = todo.id;
 		todoElement.dataset.createdAt = todo.created_at;
@@ -48,28 +47,28 @@ function TodoApp() {
 			todoElement.classList.add('todoList-todo--done');
 		}
 
-		var checkboxElement = document.createElement('input');
+		const checkboxElement = document.createElement('input');
 		checkboxElement.classList.add('todoList-todo-checkbox');
 		checkboxElement.type = 'checkbox';
 		checkboxElement.checked = !!todo.done;
 		checkboxElement.addEventListener('click', (event) => {
-			var id = event.target.closest('.todoList-todo').dataset.id;
+			const id = event.target.closest('.todoList-todo').dataset.id;
 			changeTodoDone(id, event.target.checked);
 		});
 
-		var textElement = document.createElement('span');
+		const textElement = document.createElement('span');
 		textElement.classList.add('todoList-todo-text');
 		textElement.innerText = todo.text;
 
-		var removeButtonElement = document.createElement('button');
+		const removeButtonElement = document.createElement('button');
 		removeButtonElement.classList.add('todoList-todo-remove');
 		removeButtonElement.innerHTML = '&times;';
 		removeButtonElement.addEventListener('click', (event) => {
-			var id = event.target.closest('.todoList-todo').dataset.id;
+			const id = event.target.closest('.todoList-todo').dataset.id;
 			removeTodo(id);
 		});
 
-		var labelElement = document.createElement('label');
+		const labelElement = document.createElement('label');
 		labelElement.classList.add('todoList-todo-wrapper');
 		labelElement.append(checkboxElement);
 		labelElement.append(textElement);
@@ -79,9 +78,9 @@ function TodoApp() {
 		return todoElement;
 	}
 
-	var insertTodoItem = function (todoElement) {
-		var checked = todoElement.querySelector('.todoList-todo-checkbox').checked;
-		var childrenElements = checked
+	const insertTodoItem = (todoElement) => {
+		const checked = todoElement.querySelector('.todoList-todo-checkbox').checked;
+		const childrenElements = checked
 			? this.todoList.querySelectorAll('.todoList-todo.todoList-todo--done')
 			: this.todoList.querySelectorAll('.todoList-todo:not(.todoList-todo--done)');
 
@@ -95,7 +94,7 @@ function TodoApp() {
 			return;
 		}
 
-		var inserted = false;
+		let inserted = false;
 		childrenElements.forEach((element) => {
 			if ( ! inserted && element.dataset.createdAt < todoElement.dataset.createdAt) {
 				this.todoList.insertBefore(todoElement, element);
@@ -104,12 +103,13 @@ function TodoApp() {
 		});
 
 		if ( ! inserted) {
-			this.todoList.insertAfter(todoElement, childrenElements.item(childrenElements.length - 1));
+			childrenElements.item(childrenElements.length - 1)
+				.insertAdjacentElement('afterend', todoElement);
 		}
-	}.bind(this);
+	};
 
 
-	var addTodo = function (text, callback) {
+	const addTodo = (text, callback) => {
 		$.ajax(this.baseUrl + '/todos', {
 			method: 'POST',
 			contentType: 'application/json; charset=utf-8',
@@ -120,16 +120,15 @@ function TodoApp() {
 					return;
 				}
 
-				var todoElement = createTodoItem(response.todo);
-				todoElement.style.display = 'none';
+				const todoElement = createTodoItem(response.todo);
 				insertTodoItem(todoElement);
 				//todoElement.slideDown();
 				callback();
 			}
 		})
-	}.bind(this);
+	};
 
-	var changeTodoDone = function (id, done) {
+	const changeTodoDone = (id, done) => {
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'PATCH',
 			contentType: 'application/json; charset=utf-8',
@@ -140,7 +139,7 @@ function TodoApp() {
 					return;
 				}
 
-				var todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+				const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
 				todoElement.querySelector('.todoList-todo-checkbox').checked = !!response.todo.done;
 
 				// todoElement.remove();
@@ -149,9 +148,9 @@ function TodoApp() {
 				insertTodoItem(todoElement);
 			}
 		})
-	}.bind(this);
+	};
 
-	var removeTodo = function (id) {
+	const removeTodo = (id) => {
 		// send request to delete the item
 		$.ajax(this.baseUrl + '/todos/' + id, {
 			method: 'DELETE',
@@ -162,11 +161,11 @@ function TodoApp() {
 				}
 
 				// if successful, animate away and then remove the item
-				var todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
+				const todoElement = document.querySelector(`.todoList-todo[data-id="${id}"]`);
 				todoElement.remove();
 			}
 		});
-	}.bind(this);
+	};
 
 	return this;
 }
