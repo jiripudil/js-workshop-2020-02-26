@@ -15,7 +15,7 @@ body {
 .todoApp-heading {
 	font-size: 2rem;
 	text-align: center;
-	color: #c09;
+	color: red;
 	padding: 1rem;
 	margin: 0;
 }

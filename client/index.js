@@ -1,4 +1,5 @@
 import {TodoApp} from './TodoApp.js';
+import './style.css';
 
 const onReady = () => {
 	const todoApp = new TodoApp();
